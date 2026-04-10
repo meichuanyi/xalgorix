@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +20,7 @@ import (
 	"github.com/xalgord/xalgorix/v4/internal/web"
 )
 
-const version = "4.0.10"
+const version = "4.0.11"
 
 func main() {
 	// Top-level crash recovery — catches panics that escape all other handlers.
@@ -87,29 +88,121 @@ func main() {
 	if args.update {
 		fmt.Println("Updating xalgorix to latest version...")
 
-		// Use go install — clean, handles all architectures, always gets latest tagged version
-		// GOPROXY=direct bypasses proxy cache which can be 30+ min stale
-		cmd := exec.Command("go", "install", "-v", "github.com/xalgord/xalgorix/v4/cmd/xalgorix@latest")
-		cmd.Env = append(os.Environ(),
-			"GOPROXY=direct",
-			"GONOSUMCHECK=github.com/xalgord/*",
-			"GONOSUMDB=github.com/xalgord/*",
-		)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "❌ Update failed: %v\n", err)
+		// Fetch latest release from GitHub
+	 resp, err := http.Get("https://api.github.com/repos/xalgord/xalgorix/releases/latest")
+		if err != nil || resp.StatusCode != 200 {
+			fmt.Fprintf(os.Stderr, "❌ Failed to fetch latest release: %v\n", err)
+			os.Exit(1)
+		}
+		var release struct {
+			TagName   string `json:"tag_name"`
+			Assets    []struct {
+				Name               string `json:"name"`
+				BrowserDownloadURL string `json:"browser_download_url"`
+			} `json:"assets"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to parse release: %v\n", err)
+			os.Exit(1)
+		}
+		resp.Body.Close()
+
+		tag := release.TagName
+		version := strings.TrimPrefix(tag, "v")
+		fmt.Printf("Latest version: %s\n", version)
+
+		// Detect OS and arch for binary download
+		goos := runtime.GOOS
+		goarch := runtime.GOARCH
+		binaryName := "xalgorix"
+		if goos == "windows" {
+			binaryName = "xalgorix.exe"
+		}
+		downloadName := fmt.Sprintf("xalgorix_%s_%s_%s", version, goos, goarch)
+		if goos == "windows" {
+			downloadName += ".exe"
+		}
+
+		var downloadURL string
+		for _, asset := range release.Assets {
+			if asset.Name == downloadName || asset.Name == binaryName {
+				downloadURL = asset.BrowserDownloadURL
+				break
+			}
+		}
+
+		if downloadURL == "" {
+			// Fallback: try to download the uploaded binary
+			downloadURL = fmt.Sprintf("https://github.com/xalgord/xalgorix/releases/download/%s/xalgorix", tag)
+		}
+
+		fmt.Printf("Downloading: %s\n", downloadURL)
+
+		// Download to temp file
+		tmpFile, err := os.CreateTemp("", "xalgorix-*")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to create temp file: %v\n", err)
+			os.Exit(1)
+		}
+		tmpPath := tmpFile.Name()
+		tmpFile.Close()
+
+		resp2, err := http.Get(downloadURL)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Download failed: %v\n", err)
+			os.Remove(tmpPath)
+			os.Exit(1)
+		}
+		if resp2.StatusCode != 200 {
+			fmt.Fprintf(os.Stderr, "❌ Download failed with status %d\n", resp2.StatusCode)
+			resp2.Body.Close()
+			os.Remove(tmpPath)
 			os.Exit(1)
 		}
 
-		fmt.Println("✅ Updated successfully!")
+		data, err := io.ReadAll(resp2.Body)
+		resp2.Body.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to read download: %v\n", err)
+			os.Remove(tmpPath)
+			os.Exit(1)
+		}
 
-		// Show the new version
+		if err := os.WriteFile(tmpPath, data, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to write binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Install: copy to GOPATH/bin
 		goPath := os.Getenv("GOPATH")
 		if goPath == "" {
 			goPath = filepath.Join(os.Getenv("HOME"), "go")
 		}
-		verCmd := exec.Command(filepath.Join(goPath, "bin", "xalgorix"), "--version")
+		installPath := filepath.Join(goPath, "bin", "xalgorix")
+
+		if err := os.MkdirAll(filepath.Join(goPath, "bin"), 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to create bin dir: %v\n", err)
+			os.Exit(1)
+		}
+
+		if err := exec.Command("cp", tmpPath, installPath).Run(); err != nil {
+			// Try with sudo
+			sudoCmd := exec.Command("sudo", "cp", tmpPath, installPath)
+			sudoCmd.Stdin = os.Stdin
+			sudoCmd.Stdout = os.Stdout
+			sudoCmd.Stderr = os.Stderr
+			if err := sudoCmd.Run(); err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Failed to install (need sudo): %v\n", err)
+				os.Exit(1)
+			}
+		}
+
+		os.Remove(tmpPath)
+
+		fmt.Println("✅ Updated successfully!")
+
+		// Show the new version
+		verCmd := exec.Command(installPath, "--version")
 		verCmd.Stdout = os.Stdout
 		verCmd.Stderr = os.Stderr
 		verCmd.Run()

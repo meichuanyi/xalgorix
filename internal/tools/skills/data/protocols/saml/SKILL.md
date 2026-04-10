@@ -1,5 +1,5 @@
 ---
-name: saml-protocol
+name: saml
 description: SAML protocol-level testing covering assertion flow analysis, metadata exploitation, and binding-specific attacks
 ---
 

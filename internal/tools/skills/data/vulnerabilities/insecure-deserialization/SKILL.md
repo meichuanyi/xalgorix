@@ -1,3 +1,8 @@
+---
+name: insecure-deserialization
+description: Insecure Deserialization — Deep Testing Methodology
+---
+
 # Insecure Deserialization — Deep Testing Methodology
 
 ## Overview

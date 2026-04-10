@@ -1,3 +1,8 @@
+---
+name: websocket-hijacking
+description: WebSocket Hijacking (CSWSH) — Deep Testing Methodology
+---
+
 # WebSocket Hijacking (CSWSH) — Deep Testing Methodology
 
 ## Overview

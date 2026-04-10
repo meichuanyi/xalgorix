@@ -12,7 +12,7 @@ import (
 	"github.com/xalgord/xalgorix/v4/internal/tools"
 )
 
-//go:embed data/*/*
+//go:embed data/*/*/*
 var embeddedSkills embed.FS
 
 // Register adds skill tools to the registry.
@@ -50,17 +50,32 @@ func makeReadSkill(fsys fs.FS) func(args map[string]string) (tools.Result, error
 			category = "vulnerabilities"
 		}
 
-		// Sanitize — prevent path traversal
-		name = filepath.Base(name)
-		category = filepath.Base(category)
+		// Sanitize category (only allow alphanum and dash)
+		category = strings.Map(func(r rune) rune {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
+				return r
+			}
+			return -1
+		}, category)
 
 		if name == "" {
 			return tools.Result{Error: "skill name is required"}, nil
 		}
 
-		// Add .md extension if missing
-		if !strings.HasSuffix(name, ".md") {
-			name = name + ".md"
+		// Sanitize name — prevent path traversal, allow alphanum, dash, underscore, dot
+		name = strings.Map(func(r rune) rune {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' || r == '.' {
+				return r
+			}
+			return -1
+		}, name)
+
+		// Add SKILL.md if no extension
+		if !strings.Contains(name, ".") {
+			name = name + "/SKILL.md"
+		} else {
+			// Convert old-style names (e.g., sql_injection.md) to new path
+			name = strings.TrimSuffix(name, ".md") + "/SKILL.md"
 		}
 
 		skillPath := category + "/" + name
@@ -83,8 +98,11 @@ func makeReadSkill(fsys fs.FS) func(args map[string]string) (tools.Result, error
 
 func searchAllCategories(fsys fs.FS, name string) string {
 	categories := []string{"vulnerabilities", "protocols", "frameworks", "cloud", "reconnaissance", "technologies", "scan_modes", "coordination"}
+	// Strip /SKILL.md or .md suffix to get just the skill name
+	name = strings.TrimSuffix(name, "/SKILL.md")
+	name = strings.TrimSuffix(name, ".md")
 	for _, cat := range categories {
-		path := cat + "/" + name
+		path := cat + "/" + name + "/SKILL.md"
 		data, err := fs.ReadFile(fsys, path)
 		if err == nil {
 			return string(data)
@@ -114,10 +132,11 @@ func makeListSkills(fsys fs.FS) func(args map[string]string) (tools.Result, erro
 
 			var skills []string
 			for _, e := range entries {
-				if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") || e.Name() == ".gitkeep" {
+				// Only list directories (skill packages)
+				if !e.IsDir() || e.Name() == ".gitkeep" {
 					continue
 				}
-				skills = append(skills, strings.TrimSuffix(e.Name(), ".md"))
+				skills = append(skills, e.Name())
 			}
 
 			if len(skills) == 0 {

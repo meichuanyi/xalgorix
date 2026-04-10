@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Xalgorix is an autonomous AI pentesting agent written in Go. It uses an LLM-driven agent loop that executes security tools to discover vulnerabilities, with both a Web UI dashboard and a CLI interface.
 
-**Key technologies:** Go 1.24+, gorilla/websocket, charmbracelet/bubbletea (TUI), go-rod (browser automation)
+**Key technologies:** Go 1.25+, gorilla/websocket, bubbletea (TUI), go-rod (browser automation)
 
 ## Build Commands
 
 ```bash
-make build       # Build binary to ./build/xalgorix (v4.0.8 with injected LDFLAGS)
+make build       # Build binary to ./build/xalgorix (with injected LDFLAGS)
 make run         # Run with: go run ./cmd/xalgorix/ [args]
 make test        # Run all tests
 make lint        # go fmt + go vet
@@ -23,6 +23,8 @@ go test ./... -v -run TestName    # Run a single test
 ```
 
 Binary is also pre-built at `./xalgorix` (Linux amd64).
+
+**Update:** Run `xalgorix --update` to get the latest version.
 
 ## Architecture
 
@@ -101,7 +103,7 @@ All config via environment variables (loaded from `~/.xalgorix.env` and `/etc/xa
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `XALGORIX_LLM` | Yes | Model e.g. `openai/gpt-5.4`, `anthropic/claude-sonnet-4-6` |
+| `XALGORIX_LLM` | Yes | Model e.g. `openai/gpt-4o`, `anthropic/claude-sonnet-4-6`, `minimax/M2.7` |
 | `XALGORIX_API_KEY` | Yes | API key |
 | `XALGORIX_API_BASE` | No | Custom endpoint (auto-detected from provider prefix) |
 | `XALGORIX_DISCORD_WEBHOOK` | No | Discord alerts |

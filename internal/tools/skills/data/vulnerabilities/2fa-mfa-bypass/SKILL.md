@@ -1,3 +1,8 @@
+---
+name: 2fa-mfa-bypass
+description: 2FA / MFA Bypass — Deep Testing Methodology
+---
+
 # 2FA / MFA Bypass — Deep Testing Methodology
 
 ## Overview

@@ -20,14 +20,15 @@ func setupTestSkills(t *testing.T) string {
 		os.MkdirAll(filepath.Join(dir, cat), 0755)
 	}
 
-	// Create test skill files
+	// Create test skill files in new directory/SKILL.md format
 	files := map[string]string{
-		"vulnerabilities/sql_injection.md": "# SQL Injection\nTest payloads...",
-		"vulnerabilities/xss.md":           "# XSS\nReflected payloads...",
-		"protocols/graphql.md":             "# GraphQL\nIntrospection...",
-		"frameworks/django.md":             "# Django\nDebug mode...",
+		"vulnerabilities/sql_injection/SKILL.md": "# SQL Injection\nTest payloads...",
+		"vulnerabilities/xss/SKILL.md":           "# XSS\nReflected payloads...",
+		"protocols/graphql/SKILL.md":             "# GraphQL\nIntrospection...",
+		"frameworks/django/SKILL.md":             "# Django\nDebug mode...",
 	}
 	for path, content := range files {
+		os.MkdirAll(filepath.Join(dir, filepath.Dir(path)), 0755)
 		os.WriteFile(filepath.Join(dir, path), []byte(content), 0644)
 	}
 

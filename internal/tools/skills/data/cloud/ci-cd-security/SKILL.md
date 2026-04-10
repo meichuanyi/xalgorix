@@ -32,7 +32,7 @@ curl -sk http://TARGET:8111/app/rest/server
 ```yaml
 # Vulnerable workflow — user-controlled input in run step
 # PR title, branch name, issue title → injected into bash
-name: Vulnerable
+name: ci-cd-security
 on:
   issues:
     types: [opened]
