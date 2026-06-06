@@ -553,3 +553,86 @@ Xalgorix is released under the MIT License. See [LICENSE](LICENSE).
 | Documentation | [docs.xalgorix.com](https://docs.xalgorix.com)                                   |
 | Issues        | [github.com/xalgord/xalgorix/issues](https://github.com/xalgord/xalgorix/issues) |
 | Support       | [buymeacoffee.com/xalgord](https://buymeacoffee.com/xalgord)                     |
+
+
+## FAQ
+
+### What is Xalgorix?
+
+Xalgorix is the most powerful open-source AI pentesting agent. It combines 200+ wrapped security tools with AI intelligence to perform autonomous penetration testing, generate working PoCs, and produce audit-ready reports.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **200+ Security Tools** | Wrapped tools including wpscan, sqlmap, hydra, ffuf, gobuster, hashcat, paramspider... |
+| **49 MCP Tools** | list_tools, run_tool, run_probe, test_web_app, get_chain_state, report_web_vulnerability... |
+| **60+ Probes** | OWASP Top 10 bug classes coverage |
+| **17 Specialist Agents** | Domain-specific AI agents for different attack vectors |
+| **Runs Locally** | No cloud, no telemetry, fully offline capable |
+| **Claude Code MCP** | Subscription-driven, no API key required |
+| **Audit-Ready Reports** | Professional pentest documentation |
+
+### Installation
+
+```bash
+pip install xalgorix
+```
+
+### How to Use
+
+```bash
+# Start autonomous pentest
+xalgorix --target https://example.com
+
+# Use specific probe
+xalgorix --target https://example.com --probe sql-injection
+
+# Generate report
+xalgorix --target https://example.com --report
+```
+
+### MCP Tools Categories
+
+| Category | Tools |
+|----------|-------|
+| **Discovery** | list_tools, search_tools, tool_info |
+| **Execution** | run_tool, run_probe, test_web_app |
+| **Reporting** | report_web_vulnerability, generate_audit |
+| **State** | get_chain_state, pause_chain, resume_chain |
+
+### Benchmarks
+
+| Target | Catch Rate |
+|--------|-----------|
+| OWASP Juice Shop v19.2.1 | 63.24% |
+| DVWA (Damn Vulnerable Web App) | 72.8% |
+
+### Security Tool Tiers
+
+| Tier | Tools Included |
+|------|----------------|
+| **Core** | 20 essential tools (ffuf, gobuster, nikto...) |
+| **Recommended** | 50 additional tools (sqlmap, hydra, hashcat...) |
+| **Full** | 200+ complete toolkit |
+
+### Is Xalgorix Free?
+
+Yes! Xalgorix is open-source under MIT License. Free to use, modify, and distribute.
+
+### Responsible Use
+
+⚠️ Xalgorix is designed for authorized security testing only. Always:
+- Obtain proper authorization before testing
+- Follow ethical hacking guidelines
+- Report findings responsibly
+- Never use against systems without permission
+
+### Help & Resources
+
+| Resource | Link |
+|----------|------|
+| **Documentation** | [docs.xalgorix.io](https://docs.xalgorix.io) |
+| **GitHub Issues** | [github.com/xalgord/xalgorix/issues](https://github.com/xalgord/xalgorix/issues) |
+| **Discord Community** | [discord.gg/xalgorix](https://discord.gg/xalgorix) |
+| **Security Advisories** | [github.com/xalgord/xalgorix/security/advisories](https://github.com/xalgord/xalgorix/security/advisories) |
